@@ -42,3 +42,95 @@ Standard install
 3. Set "Copy To Output Directory" to "Copy if newer" for the NLog.config.
 
 That's it, you can now compile and run your application and it will be able to use NLog.
+
+## Install the service
+
+To install our service, build the project in **Release** mode: once done, copy all files from /bin/Release/ to a more "handy" folder - such as **C:\Public\WindowsService\**
+
+Right after that, open a Command Prompt with administrative rights and type the following:
+
+```bat
+"C:\Windows\Microsoft.NET\Framework\v4.0.30319\InstallUtil.exe" "C:\Public\WindowsService\ServiceWorker.exe"
+```
+
+You should receive a quick confirmation message saying that everything went good.
+
+```
+Microsoft (R) .NET Framework Installation utility Version 4.8.9037.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Running a transacted installation.
+
+Beginning the Install phase of the installation.
+See the contents of the log file for the C:\Public\WindowsService\ServiceWorker.exe assembly's progress.
+The file is located at C:\Public\WindowsService\ServiceWorker.InstallLog.
+Installing assembly 'C:\Public\WindowsService\ServiceWorker.exe'.
+Affected parameters are:
+   logtoconsole =
+   logfile = C:\Public\WindowsService\ServiceWorker.InstallLog
+   assemblypath = C:\Public\WindowsService\ServiceWorker.exe
+Installing service ServiceWorker...
+Service ServiceWorker has been successfully installed.
+Creating EventLog source ServiceWorker in log Application...
+
+The Install phase completed successfully, and the Commit phase is beginning.
+See the contents of the log file for the C:\Public\WindowsService\ServiceWorker.exe assembly's progress.
+The file is located at C:\Public\WindowsService\ServiceWorker.InstallLog.
+Committing assembly 'C:\Public\WindowsService\ServiceWorker.exe'.
+Affected parameters are:
+   logtoconsole =
+   logfile = C:\Public\WindowsService\ServiceWorker.InstallLog
+   assemblypath = C:\Public\WindowsService\ServiceWorker.exe
+
+The Commit phase completed successfully.
+
+The transacted install has completed.
+```
+
+## Alternative install using SC CREATE
+
+If you don't want to use installutil.exe, you can also install your service using the sc create command with the following syntax:
+
+```bash
+sc create "ServiceWorker" binPath="C:\Public\WindowsService\ServiceWorker.exe"
+sc create "ServiceWorker" binPath= "C:\Public\WindowsService\ServiceWorker.exe" start= auto
+sc start ServiceWorker
+sc stop ServiceWorker
+sc delete ServiceWorker
+installutil.exe /u ServiceWorker.exe
+```
+
+However, if you do that, you'll have to manually specify the service name: also, the service Description won't be shown in the service list UI window.
+
+## Testing the Service
+
+In Windows, open the Services desktop app: Press `Windows`+`R` to open the **Run** box, enter `services.msc`, and then press `Enter` or select **OK**.
+
+Or use **Control Panel > Administrative Tools > Services** to open the service list and scroll down until you'll find new service.
+
+To start the service, choose **Start** from the service's shortcut menu.
+
+> That's our boy! From here we can either manually start it or set it to automatic, so that it will be started whenever the system starts. However, I strongly suggest to not do that for now, since it would permanently drain your system resources if you forget to disable it - it's just a sample service after all!
+
+### Verify the event log output of your service
+
+Let's just start it and take a look at the log file, which should be found in the executable folder:  
+C:\Public\WindowsService\logs
+
+If everything went good, the log should be similar to this:
+
+```
+2024-10-26 13:13:13.1722 INFO ServiceWorker.ServiceWorker ============ Service worker on Start ============
+2024-10-26 13:31:31.2859 INFO ServiceWorker.ServiceWorker ============ Service worker on Stop ============
+```
+
+Thanks for reading this article, hope you enjoyed. It.
+
+-----
+Reference
+
+https://learn.microsoft.com/en-us/dotnet/framework/windows-services/walkthrough-creating-a-windows-service-application-in-the-component-designer  
+https://www.c-sharpcorner.com/UploadFile/8a67c0/create-and-install-windows-service-step-by-step-in-C-Sharp/  
+https://www.ryadel.com/en/create-windows-service-asp-net-c-sharp-how-to-tutorial-guide/  
+https://nlog-project.org/download/
